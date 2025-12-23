@@ -1,7 +1,7 @@
 package BiddingSystem.BiddingSystemRepo.Service;
 
-import BiddingSystem.BiddingSystemRepo.DTO.UserLoginDTO;
-import BiddingSystem.BiddingSystemRepo.DTO.UserRegisterDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserLoginDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserRegisterDTO;
 import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.EmailAlreadyExistsException;
 import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.InvalidPasswordException;
 import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.UserNotFoundException;

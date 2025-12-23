@@ -1,9 +1,10 @@
 package BiddingSystem.BiddingSystemRepo.Controller;
 
 
-import BiddingSystem.BiddingSystemRepo.DTO.UserLoginDTO;
-import BiddingSystem.BiddingSystemRepo.DTO.UserRegisterDTO;
-import BiddingSystem.BiddingSystemRepo.Response.UserRegisterResponseDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.RegisterItemDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserLoginDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserRegisterDTO;
+import BiddingSystem.BiddingSystemRepo.Response.UserResponseDTO.UserRegisterResponseDTO;
 import BiddingSystem.BiddingSystemRepo.Service.AuthService;
 import BiddingSystem.BiddingSystemRepo.Service.UserService;
 import BiddingSystem.BiddingSystemRepo.config.BlacklistStore;
@@ -59,9 +60,21 @@ public class UserController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
+    @GetMapping("/addItem")
+    public ResponseEntity<?> addItem(@RequestBody RegisterItemDTO registerItemDTO){
+        userService.addItem(registerItemDTO);
+        return ResponseEntity.ok("some text");
+    }
+
     @GetMapping("/getRestrictedMaterial")
     public ResponseEntity<?> getRestrictedMaterial(@RequestHeader("Authorization") String header){
         return ResponseEntity.ok("THIS MATERIAL IS HIGHLY RESTRICTED");
+    }
+
+    @PostMapping("/addAuction")
+    public ResponseEntity<?> addItem(@RequestBody Long itemId){
+        userService.addItemToAuction(itemId);
+        return ResponseEntity.ok("Added successfully");
     }
 
 

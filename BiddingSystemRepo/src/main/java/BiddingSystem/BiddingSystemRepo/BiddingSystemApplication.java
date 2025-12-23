@@ -13,7 +13,6 @@ public class BiddingSystemApplication {
 }
 
 //FUNCTIONAL
-//such as
 // the search (user could search active auction based on their interest),
 // payment (winner need to make the payment) and
 // inventory (owner could add new items)

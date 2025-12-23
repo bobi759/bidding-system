@@ -1,11 +1,10 @@
-package BiddingSystem.BiddingSystemRepo.DTO;
+package BiddingSystem.BiddingSystemRepo.DTO.UserDTO;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.stereotype.Service;
 
 @Getter
 @Setter

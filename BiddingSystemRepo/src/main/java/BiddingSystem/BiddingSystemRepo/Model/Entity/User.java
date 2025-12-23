@@ -3,6 +3,7 @@ package BiddingSystem.BiddingSystemRepo.Model.Entity;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,10 +23,13 @@ public class User extends BaseEntity {
 
     private String password;
 
+    private String address;
+
     @Enumerated(EnumType.STRING)
     private RoleEnum role = RoleEnum.BaseUser;
 
     @JsonIgnore
+    @Setter(AccessLevel.NONE)
     private String SECRET_INFORMATION = "THIS_STRING_SHOULD_NOT_BE_EXPOSED_EVER";
 
 }

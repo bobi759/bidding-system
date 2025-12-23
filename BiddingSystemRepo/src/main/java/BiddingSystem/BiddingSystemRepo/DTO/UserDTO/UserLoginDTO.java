@@ -1,4 +1,4 @@
-package BiddingSystem.BiddingSystemRepo.DTO;
+package BiddingSystem.BiddingSystemRepo.DTO.UserDTO;
 
 
 import lombok.Getter;

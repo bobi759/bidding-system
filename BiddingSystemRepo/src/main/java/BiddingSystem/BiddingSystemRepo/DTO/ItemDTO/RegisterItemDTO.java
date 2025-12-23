@@ -1,29 +1,25 @@
-package BiddingSystem.BiddingSystemRepo.Model.Entity;
+package BiddingSystem.BiddingSystemRepo.DTO.ItemDTO;
 
-
+import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemCategoryEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemConditionEnum;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Entity
-@Table(name = "item")
-public class Item extends BaseEntity {
+public class RegisterItemDTO {
 
     private String name;
 
     private String description;
 
-    @Enumerated(EnumType.STRING)
     private ItemCategoryEnum itemCategoryEnum;
 
-    @Enumerated(EnumType.STRING)
     private ItemConditionEnum itemConditionEnum;
-
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    private User owner;
 
 }

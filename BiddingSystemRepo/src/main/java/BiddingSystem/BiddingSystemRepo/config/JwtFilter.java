@@ -66,8 +66,9 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             request.setAttribute("jti", jti);
-            String email = claims.getSubject();
-            User user = userService.getUserByEmail(email);
+            String userIdStr = claims.getSubject();
+            Long userId = Long.valueOf(userIdStr);
+            User user = userService.getUserByUserId(userId);
 
             if (user == null) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
@@ -76,7 +77,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            user.getEmail(),
+                            user.getId(),
                             null,
                             Collections.emptyList()
                     );
