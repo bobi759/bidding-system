@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -31,5 +33,9 @@ public class User extends BaseEntity {
     @JsonIgnore
     @Setter(AccessLevel.NONE)
     private String SECRET_INFORMATION = "THIS_STRING_SHOULD_NOT_BE_EXPOSED_EVER";
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "owner")
+    private Set<Item> itemSet;
 
 }
