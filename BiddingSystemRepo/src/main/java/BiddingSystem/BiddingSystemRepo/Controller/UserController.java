@@ -6,7 +6,6 @@ import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserLoginDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserRegisterDTO;
 import BiddingSystem.BiddingSystemRepo.Response.UserResponseDTO.UserRegisterResponseDTO;
 import BiddingSystem.BiddingSystemRepo.Service.AuthService;
-import BiddingSystem.BiddingSystemRepo.Service.UserService;
 import BiddingSystem.BiddingSystemRepo.config.BlacklistStore;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,16 +20,14 @@ import java.util.Map;
 @RequestMapping("/api/v1/user")
 public class UserController {
 
-    private final UserService userService;
     private final AuthService authService;
     private final ModelMapper modelMapper;
     private final SecretKey key;
     private final BlacklistStore blacklistStore;
 
 
-    public UserController(UserService userService, AuthService authService,ModelMapper modelMapper,
+    public UserController(AuthService authService,ModelMapper modelMapper,
                           SecretKey key, BlacklistStore blacklistStore) {
-        this.userService = userService;
         this.authService = authService;
         this.modelMapper = modelMapper;
         this.key = key;
@@ -44,6 +41,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody UserLoginDTO dto) {
+//        TODO: When having token, unaccessible, not relevant error
         return ResponseEntity.ok(authService.login(dto));
     }
 
@@ -60,22 +58,13 @@ public class UserController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    @GetMapping("/addItem")
-    public ResponseEntity<?> addItem(@RequestBody RegisterItemDTO registerItemDTO){
-        userService.addItem(registerItemDTO);
-        return ResponseEntity.ok("some text");
-    }
 
     @GetMapping("/getRestrictedMaterial")
     public ResponseEntity<?> getRestrictedMaterial(@RequestHeader("Authorization") String header){
         return ResponseEntity.ok("THIS MATERIAL IS HIGHLY RESTRICTED");
     }
 
-    @PostMapping("/addAuction")
-    public ResponseEntity<?> addItem(@RequestBody Long itemId){
-        userService.addItemToAuction(itemId);
-        return ResponseEntity.ok("Added successfully");
-    }
+
 
 
 }

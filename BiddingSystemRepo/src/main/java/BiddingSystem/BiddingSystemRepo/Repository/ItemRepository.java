@@ -1,6 +1,8 @@
 package BiddingSystem.BiddingSystemRepo.Repository;
 
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
+import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
+import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
 //    Optional<Item> findById(Long id);
 
+    boolean existsByOwnerAndName(User user, String name);
 }

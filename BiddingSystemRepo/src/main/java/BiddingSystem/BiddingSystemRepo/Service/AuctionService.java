@@ -1,7 +1,5 @@
 package BiddingSystem.BiddingSystemRepo.Service;
 
-import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.RegisterItemDTO;
-import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemAlreadyInUserInventory;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
@@ -9,40 +7,39 @@ import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
-import jakarta.validation.Valid;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ItemService {
+public class AuctionService {
 
     private final ItemRepository itemRepository;
+    private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
 
-
-
-    public ItemService(ItemRepository itemRepository,UserRepository userRepository,ModelMapper modelMapper){
+    public AuctionService(ItemRepository itemRepository, AuctionRepository auctionRepository, UserRepository userRepository){
         this.itemRepository = itemRepository;
+        this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
-        this.modelMapper = modelMapper;
     }
 
-    public void addItem(@Valid RegisterItemDTO registerItemDTO) throws ItemAlreadyInUserInventory {
+
+    public void addItemToAuction(Long itemId) {
+
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("Item not found with id " + itemId));
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
         User user = userRepository.findUserById(userId);
 
-        if (itemRepository.existsByOwnerAndName(user,registerItemDTO.getName())){
-            throw new ItemAlreadyInUserInventory("Item with same name already in current user's inventory!");
-        }
+        Auction auction = new Auction();
+        auction.setItem(item);
+        auction.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
+        auction.setOwner(user);
 
-        Item newItem = modelMapper.map(registerItemDTO, Item.class);
-        newItem.setOwner(user);
-
-        itemRepository.save(newItem);
+        auctionRepository.save(auction);
     }
+
 
 }

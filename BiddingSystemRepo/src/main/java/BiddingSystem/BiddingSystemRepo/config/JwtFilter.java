@@ -1,7 +1,7 @@
 package BiddingSystem.BiddingSystemRepo.config;
 
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
-import BiddingSystem.BiddingSystemRepo.Service.UserService;
+import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -23,12 +23,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final SecretKey key;
     private final BlacklistStore blacklistStore;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
-    public JwtFilter(UserService userService,
-                     BlacklistStore blacklistStore,
-                     SecretKey key) {
-        this.userService = userService;
+    public JwtFilter(BlacklistStore blacklistStore,
+            UserRepository userRepository,
+            SecretKey key) {
+        this.userRepository = userRepository;
         this.blacklistStore = blacklistStore;
         this.key = key;
     }
@@ -68,7 +68,7 @@ public class JwtFilter extends OncePerRequestFilter {
             request.setAttribute("jti", jti);
             String userIdStr = claims.getSubject();
             Long userId = Long.valueOf(userIdStr);
-            User user = userService.getUserByUserId(userId);
+            User user = userRepository.findUserById(userId);
 
             if (user == null) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
