@@ -1,6 +1,8 @@
 package BiddingSystem.BiddingSystemRepo.config;
 
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
+import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
+import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -17,13 +19,17 @@ import java.util.List;
 public class DataSeeder {
 
     private final UserRepository userRepository;
+    private final AuctionRepository auctionRepository;
+    private final ItemRepository itemRepository;
 
     @Autowired
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, AuctionRepository auctionRepository, ItemRepository itemRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.itemRepository = itemRepository;
+        this.auctionRepository = auctionRepository;
     }
 
     @Bean
@@ -46,6 +52,8 @@ public class DataSeeder {
 
             userRepository.save(user1);
             userRepository.save(user2);
+
+
 
         };
     }

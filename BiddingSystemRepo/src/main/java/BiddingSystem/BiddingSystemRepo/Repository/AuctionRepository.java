@@ -5,9 +5,13 @@ import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction,Long> {
 
     boolean existsByItemIdAndOwnerIdAndAuctionStatusEnum(Long itemId,Long ownerId, AuctionStatusEnum auctionStatusEnum);
+
+    Optional<Auction> findByItemId(Long itemId);
 }

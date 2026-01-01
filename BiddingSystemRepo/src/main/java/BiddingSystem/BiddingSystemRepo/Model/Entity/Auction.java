@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -23,15 +24,17 @@ public class Auction extends BaseEntity {
     @ManyToOne
     private Item item;
 
-    private LocalDateTime listedAt = LocalDateTime.now();
+    private ZonedDateTime listedAt = ZonedDateTime.now();
 
-    private LocalDateTime startingAt;
+    private ZonedDateTime startingAt = ZonedDateTime.now();
 
-    private Duration auctionDuration = Duration.ofDays(1);
+    private Duration auctionDuration;
 
-    private LocalDateTime endsAt;
+    private ZonedDateTime endsAt;
 
     private BigDecimal reservePrice;
+
+    private BigDecimal startingPrice;
 
 //    Active auctions will be set in cache - fast-access memory store -> Write-through, Write-behind (Lazy), Cache-Aside
     @Enumerated(value = EnumType.STRING)
@@ -43,5 +46,9 @@ public class Auction extends BaseEntity {
     @OneToMany(mappedBy = "auction", cascade = CascadeType.PERSIST)
     private List<Bid> winnerBid;
 
+    @PrePersist
+    public void setEndsAt(){
+        this.endsAt = this.startingAt.plus(auctionDuration);
+    }
 
 }
