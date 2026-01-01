@@ -2,6 +2,7 @@ package BiddingSystem.BiddingSystemRepo;
 
 
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
+import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -11,8 +12,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Clock;
 
 
 @SpringBootTest
@@ -31,11 +37,16 @@ public class BaseTestClass {
     protected ItemRepository itemRepository;
 
     @Autowired
+    protected AuctionRepository auctionRepository;
+
+    @Autowired
     protected PasswordEncoder passwordEncoder;
 
     @PersistenceContext
     protected EntityManager entityManager;
 
+    @MockitoBean
+    Clock clock;
 
     @BeforeEach
     public void setUp() throws Exception {

@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Getter
 @Setter
@@ -21,6 +22,6 @@ public class Bid extends BaseEntity {
     @OneToOne
     private User user;
 
-    private LocalDateTime created_at = LocalDateTime.now();
+    private ZonedDateTime created_at = ZonedDateTime.now();
 
 }

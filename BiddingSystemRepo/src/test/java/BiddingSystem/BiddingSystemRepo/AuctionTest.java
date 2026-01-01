@@ -1,7 +1,9 @@
 package BiddingSystem.BiddingSystemRepo;
 
+import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
+import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemCategoryEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemConditionEnum;
 import org.junit.jupiter.api.Assertions;
@@ -13,18 +15,18 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// TODO: TASKS
-
-
 
 @Transactional
 public class AuctionTest extends BaseTestClass {
-
 
     private Long itemId;
 
@@ -51,7 +53,6 @@ public class AuctionTest extends BaseTestClass {
 
         itemRepository.save(item);
         itemId = item.getId();
-        System.out.println(itemId);
 
         Assertions.assertNotNull(user);
 
@@ -63,90 +64,239 @@ public class AuctionTest extends BaseTestClass {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
-//    @Rollback(false)
     @Test
-    void addingItemToAuction_shouldRun_Successfully() throws Exception {
+    public void addingItemToAuction_shouldFail_whenInvalidItemId() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofMinutes(50L);
+
         mockMvc.perform(
                         post("/api/v1/auction/addAuction")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                             {
-                                              "itemId": %d,
-                                              "draft": true
+                                                "itemId": 999,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
                                             }
                                         """
-                                        .formatted(itemId))
+                                        .formatted(requestTime.toString(), duration.toString())
+                                )
                 )
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is4xxClientError());
+
+
     }
 
     @Test
-    void addingItemToAuction_shouldFail_whenItemWithNoSuchId() throws Exception {
-
+    public void addingItemToAuction_shouldFail_whenStartsInPast() throws Exception {
         mockMvc.perform(
                         post("/api/v1/auction/addAuction")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                             {
-                                              "itemId": 9999,
-                                              "draft": false
+                                                "itemId": %d,
+                                                "startingAt": "2025-12-31T18:02:05.550+02:00",
+                                                "auctionDuration": "PT50M",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
                                             }
-                                        """)
+                                        """
+                                        .formatted(itemId)
+                                )
                 )
                 .andExpect(status().is4xxClientError());
     }
 
     @Test
-    void addingItemToAuction_shouldFail_whenSameItemAddedToMoreThanOneActiveAuctions() throws Exception {
-        mockMvc.perform(
-                        post("/api/v1/auction/addAuction")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                            {
-                                              "itemId": %d,
-                                              "draft": true
-                                            }
-                                        """
-                                        .formatted(itemId))
-                )
-                .andExpect(status().is2xxSuccessful());
+    public void addingItemToAuction_shouldRunSuccessfully_whenValidInputAndDateTimeNow() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofMinutes(50L);
 
         mockMvc.perform(
                         post("/api/v1/auction/addAuction")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                             {
-                                              "itemId": %d,
-                                              "draft": true
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
                                             }
                                         """
-                                        .formatted(itemId))
+                                        .formatted(itemId,
+                                                requestTime.toString(),
+                                                duration.toString()
+                                        )
+                                )
                 )
                 .andExpect(status().is2xxSuccessful());
+
+        Auction auction = auctionRepository.findByItemId(itemId).orElseThrow(() -> new AssertionError("Auction not created"));
+
+        Assertions.assertEquals(auction.getItem().getId(), itemId);
+
+        Assertions.assertEquals(requestTime.toInstant(),
+                auction.getStartingAt().toInstant());
+
+        Assertions.assertEquals(AuctionStatusEnum.ACTIVE, auction.getAuctionStatusEnum());
+
+        Assertions.assertEquals(requestTime.plus(duration).toInstant(), auction.getEndsAt().toInstant());
+
+    }
+
+    @Test
+    public void addingItemToAuction_shouldRunSuccessfully_whenValidInputAndDateInFuture() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now().plusSeconds(1);
+        Duration duration = Duration.ofMinutes(50L);
 
         mockMvc.perform(
                         post("/api/v1/auction/addAuction")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                             {
-                                              "itemId": %d,
-                                              "draft": false
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
                                             }
                                         """
-                                        .formatted(itemId))
+                                        .formatted(itemId
+                                                , requestTime.toString()
+                                                , duration.toString()
+                                        )
+                                )
                 )
                 .andExpect(status().is2xxSuccessful());
+
+        Auction auction = auctionRepository.findByItemId(itemId).orElseThrow(() -> new AssertionError("Auction not created"));
+
+        Assertions.assertEquals(auction.getItem().getId(), itemId);
+
+        Assertions.assertEquals(requestTime.toInstant(),
+                auction.getStartingAt().toInstant());
+
+        Assertions.assertEquals(AuctionStatusEnum.SCHEDULED, auction.getAuctionStatusEnum());
+
+        Assertions.assertEquals(requestTime.plus(duration).toInstant(), auction.getEndsAt().toInstant());
+
+    }
+
+    @Test
+    public void addingItemToAuction_shouldFail_whenReservePriceNegative() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofMinutes(50L);
+        BigDecimal negativeReservePrice = new BigDecimal("-0.01");
 
         mockMvc.perform(
                         post("/api/v1/auction/addAuction")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                             {
-                                              "itemId": %d,
-                                              "draft": false
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": %s
                                             }
                                         """
-                                        .formatted(itemId))
+                                        .formatted(itemId,
+                                                requestTime.toString(),
+                                                duration.toString(),
+                                                negativeReservePrice
+                                        )
+                                )
+                )
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    public void addingItemToAuction_shouldFail_whenStartingPriceNegative() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofMinutes(50L);
+        BigDecimal negativeStartingPrice = new BigDecimal("-0.01");
+
+        mockMvc.perform(
+                        post("/api/v1/auction/addAuction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                            {
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": %s,
+                                                "reservePrice": 20.00
+                                            }
+                                        """
+                                        .formatted(itemId,
+                                                requestTime.toString(),
+                                                duration.toString(),
+                                                negativeStartingPrice
+                                        )
+                                )
+                )
+                .andExpect(status().is4xxClientError());
+    }
+
+
+    @Test
+    public void addingItemToAuction_shouldFail_whenDurationTooShort() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofMinutes(9L);
+
+        mockMvc.perform(
+                        post("/api/v1/auction/addAuction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                            {
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
+                                            }
+                                        """
+                                        .formatted(itemId,
+                                                requestTime.toString(),
+                                                duration.toString()
+                                        )
+                                )
+                )
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    public void addingItemToAuction_shouldFail_whenDurationTooLong() throws Exception {
+
+        ZonedDateTime requestTime = ZonedDateTime.now();
+        Duration duration = Duration.ofDays(7).plus(Duration.ofSeconds(1));
+
+        mockMvc.perform(
+                        post("/api/v1/auction/addAuction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                            {
+                                                "itemId": %d,
+                                                "startingAt": "%s",
+                                                "auctionDuration": "%s",
+                                                "startingPrice": 10.00,
+                                                "reservePrice": 20.00
+                                            }
+                                        """
+                                        .formatted(itemId,
+                                                requestTime.toString(),
+                                                duration.toString()
+                                        )
+                                )
                 )
                 .andExpect(status().is4xxClientError());
     }
