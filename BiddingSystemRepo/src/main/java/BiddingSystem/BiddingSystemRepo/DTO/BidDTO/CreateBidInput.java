@@ -14,6 +14,4 @@ public class CreateBidInput {
 
     Long auctionId;
     BigDecimal bidPrice;
-
-    ZonedDateTime sentDateTime;
 }
