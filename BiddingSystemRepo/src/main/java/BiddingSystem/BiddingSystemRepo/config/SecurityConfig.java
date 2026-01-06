@@ -35,7 +35,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,JwtFilter jwtFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
 
         // disable CSRF since we use fronted (any other port, not server side rendered
         // app)
@@ -49,11 +49,11 @@ public class SecurityConfig {
                         "/api/v1/user/register",
                         "/api/v1/user/login",
                         "/swagger-ui/**",
-                        "/swagger-ui.html",    // Ensure this is also allowed
-                        "/v3/api-docs",        // Explicitly allow this path
-                        "/v3/api-docs/**"      // Allow all v3/api-docs paths
+                        "/swagger-ui.html", // Ensure this is also allowed
+                        "/v3/api-docs", // Explicitly allow this path
+                        "/v3/api-docs/**" // Allow all v3/api-docs paths
                 )
-                .permitAll()  // These paths don't need JWT authentication
+                .permitAll() // These paths don't need JWT authentication
                 .anyRequest().authenticated());
 
         // don't use sessions because again we use JWT
@@ -65,7 +65,6 @@ public class SecurityConfig {
         // the logic of UsernamePasswordAuthenticationFilter is skipped since user
         // already trusted
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
 
         return http.build();
     }
