@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 // TODO: Add logout tests
-// AAA - Arrange, Act, Assert
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationServiceTest {
 

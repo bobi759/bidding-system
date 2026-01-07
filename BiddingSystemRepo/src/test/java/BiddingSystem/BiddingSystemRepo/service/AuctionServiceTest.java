@@ -5,7 +5,9 @@ import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionPastSta
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.ItemAlreadyInAuction;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemNotFound;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
+import BiddingSystem.BiddingSystemRepo.Model.Entity.Bid;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
+import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.BidRepository;
@@ -27,14 +29,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 //TODO : Inject Clock
+//TODO: Add test no starting time import case
 @ExtendWith(MockitoExtension.class)
 public class AuctionServiceTest {
 
@@ -103,16 +108,14 @@ public class AuctionServiceTest {
                 .thenReturn(false);
     }
 
+    private void mockAuthenticatedUser(Long userId) {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(userId);
 
-    @BeforeEach
-    void setUpSecurityContext() {
-        Authentication authentication = Mockito.mock(Authentication.class);
-        when(authentication.getPrincipal()).thenReturn(1L);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
 
-        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-
-        SecurityContextHolder.setContext(securityContext);
+        SecurityContextHolder.setContext(context);
     }
 
     @Test
@@ -148,6 +151,8 @@ public class AuctionServiceTest {
     @Test
     public void givenActiveScheduledStatus_addingItemToAuctionShouldFail(){
 
+        mockAuthenticatedUser(USER_ID);
+
         CreateAuctionInput createAuctionInput = createValidInput(ZonedDateTime.now());
 
 
@@ -168,6 +173,9 @@ public class AuctionServiceTest {
 
     @Test
     public void givenPastAuctionStartingTime_addingItemToAuctionShouldFail(){
+
+        mockAuthenticatedUser(USER_ID);
+
 
         Duration subtractedPeriodToBePassed = Duration.ofSeconds(3);
         ZonedDateTime startingAt = ZonedDateTime.now().minus(subtractedPeriodToBePassed);
@@ -249,7 +257,7 @@ public class AuctionServiceTest {
     }
 
     @Test
-    void givenNegativeReservePrice_shouldFail() {
+    public void givenNegativeReservePrice_shouldFail() {
         CreateAuctionInput input = createInput(
                 ZonedDateTime.now().plusSeconds(1),
                 BigDecimal.TEN,
@@ -266,7 +274,7 @@ public class AuctionServiceTest {
     }
 
     @Test
-    void givenNegativeStartingPrice_shouldFail() {
+    public void givenNegativeStartingPrice_shouldFail() {
         CreateAuctionInput input = createInput(
                 ZonedDateTime.now().plusSeconds(1),
                 BigDecimal.valueOf(-1),
@@ -282,7 +290,7 @@ public class AuctionServiceTest {
     }
 
     @Test
-    void givenStartingBiggerThanReserve_shouldFail() {
+    public void givenStartingBiggerThanReserve_shouldFail() {
         CreateAuctionInput input = createInput(
                 ZonedDateTime.now().plusSeconds(1),
                 BigDecimal.valueOf(30),
@@ -298,7 +306,7 @@ public class AuctionServiceTest {
     }
 
     @Test
-    void givenDurationShorterThan10Minutes_shouldFail() {
+    public void givenDurationShorterThan10Minutes_shouldFail() {
         CreateAuctionInput input = new CreateAuctionInput(
                 ITEM_ID,
                 ZonedDateTime.now().plusSeconds(1),
@@ -317,7 +325,7 @@ public class AuctionServiceTest {
     }
 
     @Test
-    void givenDurationLongerThan7Days_shouldFail() {
+    public void givenDurationLongerThan7Days_shouldFail() {
         CreateAuctionInput input = new CreateAuctionInput(
                 ITEM_ID,
                 ZonedDateTime.now().plusSeconds(1),
@@ -335,6 +343,128 @@ public class AuctionServiceTest {
         assertEquals("Duration must be shorter than 7 days!", ex.getMessage());
     }
 
+    @Test
+    public void givenNoExpiredAuctions_shouldDoNothing(){
+
+        when(auctionRepository.findByAuctionStatusEnumAndEndsAtBefore(
+                eq(AuctionStatusEnum.ACTIVE),
+                any(ZonedDateTime.class)
+        )).thenReturn(List.of());
+
+        auctionService.finishExpiredAuctions();
+
+        verify(auctionRepository, never()).saveAll(any());
+
+    }
+
+    @Test
+    void givenExpiredAuctionWithoutBid_shouldEndFailed() {
+        Auction auction = new Auction();
+        auction.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
+        auction.setReservePrice(BigDecimal.TEN);
+
+        when(auctionRepository.findByAuctionStatusEnumAndEndsAtBefore(
+                eq(AuctionStatusEnum.ACTIVE),
+                any(ZonedDateTime.class)
+        )).thenReturn(List.of(auction));
+
+        when(bidRepository.findTopByAuctionOrderByPriceDesc(auction))
+                .thenReturn(Optional.empty());
+
+        auctionService.finishExpiredAuctions();
+
+        assertEquals(AuctionStatusEnum.ENDED_FAILED, auction.getAuctionStatusEnum());
+        verify(auctionRepository).saveAll(List.of(auction));
+    }
+
+    @Test
+    void expiredAuction_withValidBid_shouldBePendingPayment() {
+        User bidder = new User();
+        Bid bid = new Bid();
+        bid.setPrice(BigDecimal.valueOf(100));
+        bid.setUser(bidder);
+
+        Auction auction = new Auction();
+        auction.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
+        auction.setReservePrice(BigDecimal.valueOf(50));
+
+        when(auctionRepository.findByAuctionStatusEnumAndEndsAtBefore(
+                eq(AuctionStatusEnum.ACTIVE),
+                any()
+        )).thenReturn(List.of(auction));
+
+        when(bidRepository.findTopByAuctionOrderByPriceDesc(auction))
+                .thenReturn(Optional.of(bid));
+
+        auctionService.finishExpiredAuctions();
+
+        assertEquals(AuctionStatusEnum.PENDING_PAYMENT, auction.getAuctionStatusEnum());
+        assertEquals(bidder, auction.getWinner());
+        assertEquals(bid, auction.getWinnerBid());
+    }
+
+
+    @Test
+    void unpaidAuction_shouldFail() {
+        Auction auction = new Auction();
+        auction.setAuctionStatusEnum(AuctionStatusEnum.PENDING_PAYMENT);
+
+        when(auctionRepository.findByAuctionStatusEnumAndPaymentDeadlineBefore(
+                eq(AuctionStatusEnum.PENDING_PAYMENT),
+                any()
+        )).thenReturn(List.of(auction));
+
+        auctionService.finishUnpaidAuctions();
+
+        assertEquals(AuctionStatusEnum.ENDED_FAILED, auction.getAuctionStatusEnum());
+    }
+
+    @Test
+    void scheduledAuction_shouldBecomeActive() {
+        Auction auction = new Auction();
+        auction.setAuctionStatusEnum(AuctionStatusEnum.SCHEDULED);
+
+        when(auctionRepository.findByAuctionStatusEnumAndStartingAtLessThanEqual(
+                eq(AuctionStatusEnum.SCHEDULED),
+                any()
+        )).thenReturn(List.of(auction));
+
+        auctionService.makeAuctionActive();
+
+        assertEquals(AuctionStatusEnum.ACTIVE, auction.getAuctionStatusEnum());
+        verify(auctionRepository).saveAll(List.of(auction));
+    }
+
+    @Test
+    void payment_successful() {
+        User buyer = new User();
+        buyer.setId(USER_ID);
+        buyer.setBalance(BigDecimal.valueOf(100));
+
+        User seller = new User();
+        seller.setBalance(BigDecimal.ZERO);
+
+        Item item = new Item();
+        item.setOwner(seller);
+
+        Bid bid = new Bid();
+        bid.setPrice(BigDecimal.valueOf(50));
+
+        Auction auction = new Auction();
+        auction.setAuctionStatusEnum(AuctionStatusEnum.PENDING_PAYMENT);
+        auction.setWinner(buyer);
+        auction.setWinnerBid(bid);
+        auction.setItem(item);
+        auction.setPaymentDeadline(ZonedDateTime.now().plusMinutes(5));
+
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+
+        auctionService.makePayment(1L);
+
+        assertEquals(BigDecimal.valueOf(50), seller.getBalance());
+        assertEquals(BigDecimal.valueOf(50), buyer.getBalance());
+        assertEquals(AuctionStatusEnum.ENDED_SUCCESS, auction.getAuctionStatusEnum());
+    }
 
 
 

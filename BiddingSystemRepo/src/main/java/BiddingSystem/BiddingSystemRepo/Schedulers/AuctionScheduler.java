@@ -4,8 +4,6 @@ import BiddingSystem.BiddingSystemRepo.Service.AuctionService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-//TODO: Scheduler for auto opening of auctions ( DRAFT -> ACTIVE)
-
 @Service
 public class AuctionScheduler {
 
@@ -15,7 +13,6 @@ public class AuctionScheduler {
         this.auctionService = auctionService;
     }
 
-    // Bidding time ends
     @Scheduled(initialDelay = 10000, fixedDelay = 60000)
     public void checkForExpiredAuctions() {
         auctionService.finishExpiredAuctions();
