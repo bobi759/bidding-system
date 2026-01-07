@@ -3,6 +3,7 @@ package BiddingSystem.BiddingSystemRepo.Service;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.AddItemToAuctionDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.CreateAuctionInput;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionNotFound;
+import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionPastStartingTimeException;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.ItemAlreadyInAuction;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.UserInsufficientBalanceException;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemNotFound;
@@ -33,37 +34,53 @@ public class AuctionService {
 
     private final ItemRepository itemRepository;
     private final AuctionRepository auctionRepository;
-    private final UserRepository userRepository;
     private final BidRepository bidRepository;
+    private final UserRepository userRepository;
 
-    public AuctionService(ItemRepository itemRepository, AuctionRepository auctionRepository,
-            UserRepository userRepository, BidRepository bidRepository) {
+    public AuctionService(ItemRepository itemRepository, AuctionRepository auctionRepository, BidRepository bidRepository, UserRepository userRepository) {
         this.itemRepository = itemRepository;
         this.auctionRepository = auctionRepository;
-        this.userRepository = userRepository;
         this.bidRepository = bidRepository;
+        this.userRepository = userRepository;
+    }
+
+    private Long extractUserId(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (Long) authentication.getPrincipal();
     }
 
     public void createAuction(CreateAuctionInput input) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
+        ZonedDateTime now = ZonedDateTime.now();
+        Long userId = extractUserId();
 
         Item Item = itemRepository.findByIdAndOwner_Id(input.getItemId(), userId)
                 .orElseThrow(() -> new ItemNotFound("Item not found with id " + input.getItemId()));
 
+        if (input.getStartingAt().isBefore(now.minusSeconds(2))) {
+            throw new AuctionPastStartingTimeException("Auction cannot start more than 2 seconds ago");
+        }
+
+//        May be broken here by the AuctionStatusEnums.STATE
         if (auctionRepository.existsByItemIdAndAuctionStatusEnum(input.getItemId(), AuctionStatusEnum.ACTIVE) ||
                 auctionRepository.existsByItemIdAndAuctionStatusEnum(input.getItemId(), AuctionStatusEnum.SCHEDULED)) {
             throw new ItemAlreadyInAuction("Current item already in active auction");
         }
 
-        ZonedDateTime startTime = (input.getStartingAt() != null)
-                ? input.getStartingAt()
-                : ZonedDateTime.now();
+        ZonedDateTime startTime =
+                (input.getStartingAt() != null)
+                        ? input.getStartingAt()
+                        : now;
 
-        AuctionStatusEnum initialStatus = startTime.isAfter(ZonedDateTime.now())
-                ? AuctionStatusEnum.SCHEDULED
-                : AuctionStatusEnum.ACTIVE;
+        AuctionStatusEnum initialStatus =
+                startTime.isAfter(now)
+                        ? AuctionStatusEnum.SCHEDULED
+                        : AuctionStatusEnum.ACTIVE;
+
+        Duration auctionDuration =
+                (input.getDuration() != null)
+                        ? input.getDuration()
+                        : Duration.ofDays(1);
 
         Duration auctionDuration = (input.getDuration() != null)
                 ? input.getDuration()
@@ -135,8 +152,7 @@ public class AuctionService {
 
     @Transactional
     public void makePayment(Long auctionId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) auth.getPrincipal();
+        Long userId =extractUserId();
 
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new AuctionNotFound("Auction not found"));
