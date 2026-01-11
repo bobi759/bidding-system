@@ -1,13 +1,13 @@
 package BiddingSystem.BiddingSystemRepo.Service;
 
-import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.AddItemToAuctionDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.CreateAuctionInput;
+import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.ExposeAuctionDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.OutputItemDTO;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionNotFound;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionPastStartingTimeException;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.ItemAlreadyInAuction;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.UserInsufficientBalanceException;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemNotFound;
-import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.UserNotFoundException;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Bid;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
@@ -16,9 +16,8 @@ import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.BidRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
-import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,13 +34,13 @@ public class AuctionService {
     private final ItemRepository itemRepository;
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
-    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
-    public AuctionService(ItemRepository itemRepository, AuctionRepository auctionRepository, BidRepository bidRepository, UserRepository userRepository) {
+    public AuctionService(ItemRepository itemRepository, AuctionRepository auctionRepository, BidRepository bidRepository, ModelMapper modelMapper) {
         this.itemRepository = itemRepository;
         this.auctionRepository = auctionRepository;
         this.bidRepository = bidRepository;
-        this.userRepository = userRepository;
+        this.modelMapper = modelMapper;
     }
 
     private Long extractUserId(){
@@ -155,7 +154,6 @@ public class AuctionService {
 
     }
 
-    // N + 1 Query
     public void closeAuction(Auction auction) {
         if (auction.getAuctionStatusEnum() != AuctionStatusEnum.ACTIVE) {
             return;
@@ -242,6 +240,13 @@ public class AuctionService {
         }
 
         auctionRepository.saveAll(scheduledAuctions);
+    }
+
+    public List<ExposeAuctionDTO> showAllAuctions(){
+        return auctionRepository.findAll()
+                .stream()
+                .map(auction -> modelMapper.map(auction, ExposeAuctionDTO.class))
+                .toList();
     }
 
 }

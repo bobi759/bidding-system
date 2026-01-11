@@ -31,15 +31,11 @@ public class JwtGeneratorInterfaceImpl{
         String jwtToken;
         jwtToken = Jwts.builder()
                 .claims()
-//               Begins adding claims (payload info).
                 .id(jti)
-//                subject is put into the token - ACTUAL INFO IN IT
                 .subject(String.valueOf(user.getId()))
                 .issuedAt(new Date(System.currentTimeMillis()))
-//                24 minutes xD
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * TOKEN_EXPIRY_TIME_IN_MINUTES))
                 .and()
-//                end of jwt builder back to main one
 
                 .signWith(getSignInKey())
                 .compact();

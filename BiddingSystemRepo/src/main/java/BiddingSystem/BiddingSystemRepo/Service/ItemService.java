@@ -4,15 +4,10 @@ import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.OutputItemDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.RegisterItemDTO;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemAlreadyInUserInventory;
 import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.UserNotFoundException;
-import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
-import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
-import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
-import BiddingSystem.BiddingSystemRepo.Response.UserResponseDTO.CreateItemResponseDTO;
-import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,14 +23,13 @@ public class ItemService {
     private final ModelMapper modelMapper;
 
 
-
     public ItemService(ItemRepository itemRepository,UserRepository userRepository, ModelMapper modelMapper){
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
     }
 
-    public CreateItemResponseDTO addItem(RegisterItemDTO itemDTO) throws ItemAlreadyInUserInventory {
+    public OutputItemDTO addItem(RegisterItemDTO itemDTO) throws ItemAlreadyInUserInventory {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
         User user = userRepository.findUserById(userId).orElseThrow(() -> new UserNotFoundException("No such user!"));
@@ -49,7 +43,7 @@ public class ItemService {
 
         Item savedItem = itemRepository.save(item);
 
-        return modelMapper.map(savedItem, CreateItemResponseDTO.class);
+        return modelMapper.map(savedItem, OutputItemDTO.class);
 
     }
 

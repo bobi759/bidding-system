@@ -1,12 +1,14 @@
 package BiddingSystem.BiddingSystemRepo.config;
 
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
+import BiddingSystem.BiddingSystemRepo.Model.Entity.Bid;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Item;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.User;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemCategoryEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemConditionEnum;
 import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
+import BiddingSystem.BiddingSystemRepo.Repository.BidRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +30,19 @@ public class DataSeeder {
     private final UserRepository userRepository;
     private final AuctionRepository auctionRepository;
     private final ItemRepository itemRepository;
+    private final BidRepository bidRepository;
 
     @Autowired
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, AuctionRepository auctionRepository, ItemRepository itemRepository) {
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder, AuctionRepository auctionRepository, ItemRepository itemRepository, BidRepository bidRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.itemRepository = itemRepository;
         this.auctionRepository = auctionRepository;
+        this.bidRepository = bidRepository;
     }
+
 
     @Bean
     CommandLineRunner initDatabase(
@@ -118,6 +123,26 @@ public class DataSeeder {
 
             List<Auction> auctionList = new ArrayList<>(Arrays.asList(auction1,auction2,auction3,auction4));
             auctionRepository.saveAll(auctionList);
+
+            Bid bid1 = new Bid();
+            bid1.setAuction(auction);
+            bid1.setUser(user2);
+            bid1.setPrice(new BigDecimal("12.50"));
+            bid1.setCreatedAt(ZonedDateTime.now().minusMinutes(5));
+
+            Bid bid2 = new Bid();
+            bid2.setAuction(auction);
+            bid2.setUser(user1);
+            bid2.setPrice(new BigDecimal("15.00"));
+            bid2.setCreatedAt(ZonedDateTime.now().minusMinutes(3));
+
+            Bid bid3 = new Bid();
+            bid3.setAuction(auction);
+            bid3.setUser(user2);
+            bid3.setPrice(new BigDecimal("18.00"));
+            bid3.setCreatedAt(ZonedDateTime.now().minusMinutes(1));
+
+            bidRepository.saveAll(List.of(bid1, bid2, bid3));
         };
     }
 }

@@ -9,13 +9,13 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop   # Hibernate will create/update your tables
+      ddl-auto: create-drop
     show-sql: true
     defer-datasource-initialization: true
 
 jwt:
   secret: "ODE2YzBhNmJlMmFkODcxYzM5YWIwNjc5ZTM1Mzc5ZTY0ODc2Y2ZkMzg0MmQwZmEzZTgwYjliM2I="
-  message: "Your message or custom token message"
+  message: "Login successful"
 
   sql:
     init:
@@ -27,8 +27,8 @@ h2:
 
 springdoc:
   api-docs:
-    enabled: true  # Ensures that the OpenAPI docs are generated
+    enabled: true
   swagger-ui:
-    enabled: true  # Enables Swagger UI
-    path: /swagger-ui.html  # Custom path for Swagger UI
-    url: /v3/api-docs  # Swagger docs location
+    enabled: true
+    path: /swagger-ui.html
+    url: /v3/api-docs

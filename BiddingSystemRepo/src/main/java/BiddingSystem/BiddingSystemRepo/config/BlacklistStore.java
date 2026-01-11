@@ -8,7 +8,7 @@ import java.util.Set;
 @Component
 public class BlacklistStore {
 
-    private Set<String> blacklistedTokens = new HashSet<>();
+    private final Set<String> blacklistedTokens = new HashSet<>();
 
     public void addToken(String jwi) {
         blacklistedTokens.add(jwi);

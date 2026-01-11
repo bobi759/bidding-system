@@ -1,10 +1,9 @@
 package BiddingSystem.BiddingSystemRepo.Controller;
 
 
-import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.RegisterItemDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserLoginDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserRegisterDTO;
-import BiddingSystem.BiddingSystemRepo.Response.UserResponseDTO.UserRegisterResponseDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.UserRegisterResponseDTO;
 import BiddingSystem.BiddingSystemRepo.Service.AuthService;
 import BiddingSystem.BiddingSystemRepo.config.BlacklistStore;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,15 +56,6 @@ public class UserController {
         blacklistStore.addToken(jti);
         return ResponseEntity.ok("Logged out successfully");
     }
-
-
-    @GetMapping("/getRestrictedMaterial")
-    public ResponseEntity<?> getRestrictedMaterial(@RequestHeader("Authorization") String header){
-        return ResponseEntity.ok("THIS MATERIAL IS HIGHLY RESTRICTED");
-    }
-
-
-
 
 }
 

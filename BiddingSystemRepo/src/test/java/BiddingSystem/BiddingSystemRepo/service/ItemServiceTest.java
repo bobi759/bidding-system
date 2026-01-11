@@ -10,7 +10,6 @@ import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemCategoryEnum;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.ItemConditionEnum;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
-import BiddingSystem.BiddingSystemRepo.Response.UserResponseDTO.CreateItemResponseDTO;
 import BiddingSystem.BiddingSystemRepo.Service.ItemService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,15 +84,15 @@ public class ItemServiceTest{
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // Mock Entity → ResponseDTO mapping
-        CreateItemResponseDTO responseDTO = new CreateItemResponseDTO();
+        OutputItemDTO responseDTO = new OutputItemDTO();
         responseDTO.setName(dto.getName());
         responseDTO.setDescription(dto.getDescription());
 
-        when(modelMapper.map(any(Item.class), eq(CreateItemResponseDTO.class)))
+        when(modelMapper.map(any(Item.class), eq(OutputItemDTO.class)))
                 .thenReturn(responseDTO);
 
         // Act
-        CreateItemResponseDTO result = itemService.addItem(dto);
+        OutputItemDTO result = itemService.addItem(dto);
 
         // Assert
         assertNotNull(result);

@@ -14,7 +14,7 @@ import java.time.ZonedDateTime;
 @Table(name = "bid")
 public class Bid extends BaseEntity {
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     private Auction auction;
 
     private BigDecimal price;

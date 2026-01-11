@@ -17,16 +17,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.crypto.SecretKey;
 
-//@EnableMethodSecurity(prePostEnabled = true)
 @Configuration
 public class SecurityConfig {
 
     @Value("${jwt.secret}")
-    private String secret; // Inject secret from application.properties
+    private String secret;
 
     @Bean
     public SecretKey secretKey() {
-        // Convert the secret string to a SecretKey
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
@@ -38,42 +36,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
 
-        // disable CSRF since we use fronted (any other port, not server side rendered
-        // app)
         http.csrf(AbstractHttpConfigurer::disable);
-        http.cors(Customizer.withDefaults()); // ✅ Enable the CORS config you defined
+        http.cors(Customizer.withDefaults());
 
-        // permit specific request (3), other authenticated (using our JWT filter)
         http.authorizeHttpRequests(auth -> auth
 
                 .requestMatchers(
                         "/api/v1/user/register",
                         "/api/v1/user/login",
                         "/swagger-ui/**",
-                        "/swagger-ui.html", // Ensure this is also allowed
-                        "/v3/api-docs", // Explicitly allow this path
-                        "/v3/api-docs/**" // Allow all v3/api-docs paths
+                        "/swagger-ui.html",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**"
                 )
-                .permitAll()  // These paths don't need JWT authentication
+                .permitAll()
                 .requestMatchers("/api/v1/item/**").authenticated()
                 .anyRequest().authenticated());
 
-        // don't use sessions because again we use JWT
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
 
-//        returns 401 unauthenticated
         http.exceptionHandling(ex -> ex
                 .authenticationEntryPoint(
                         (request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
                 )
         );
-        // runs before the UsernamePassword filter
-        // but since we added the user to trusted/authenticated users in the aut local
-        // storage (see JwtFilter.java)
-        // the logic of UsernamePasswordAuthenticationFilter is skipped since user
-        // already trusted
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
