@@ -82,9 +82,17 @@ public class DataSeeder {
             item2.setItemCategoryEnum(ItemCategoryEnum.COLLECTIBLES);
             item2.setOwner(user1);
 
-            itemRepository.save(item);
+            Item item3 = new Item();
+            item3.setName("SomeNew Item");
+            item3.setDescription("Item of the universe");
+            item3.setItemConditionEnum(ItemConditionEnum.NEW);
+            item3.setItemCategoryEnum(ItemCategoryEnum.COLLECTIBLES);
+            item3.setOwner(user2);
 
+            itemRepository.save(item);
             itemRepository.save(item2);
+            itemRepository.save(item3);
+
 
             Duration duration = Duration.ofMinutes(50);
             BigDecimal startPrice = new BigDecimal("10.00");
@@ -104,22 +112,32 @@ public class DataSeeder {
             Auction auction1 = new Auction();
             auction1.setStartingAt(ZonedDateTime.now());
             auction1.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
-            auction1.setAuctionDuration(Duration.ofSeconds(10));
+            auction1.setAuctionDuration(Duration.ofSeconds(300));
+            auction1.setStartingPrice(startPrice);
+            auction1.setMinimumIncrement(BigDecimal.valueOf(5));
+            auction1.setItem(item3);
+
 
             Auction auction4 = new Auction();
             auction4.setStartingAt(ZonedDateTime.now());
             auction4.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
-            auction4.setAuctionDuration(Duration.ofSeconds(15));
+            auction4.setAuctionDuration(Duration.ofSeconds(300));
+            auction4.setStartingPrice(startPrice);
+
 
             Auction auction2 = new Auction();
             auction2.setStartingAt(ZonedDateTime.now());
             auction2.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
-            auction2.setAuctionDuration(Duration.ofSeconds(20));
+            auction2.setAuctionDuration(Duration.ofSeconds(300));
+            auction2.setStartingPrice(startPrice);
+
 
             Auction auction3 = new Auction();
             auction3.setStartingAt(ZonedDateTime.now());
             auction3.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
-            auction3.setAuctionDuration(Duration.ofSeconds(19));
+            auction3.setAuctionDuration(Duration.ofSeconds(300));
+            auction3.setStartingPrice(startPrice);
+
 
             List<Auction> auctionList = new ArrayList<>(Arrays.asList(auction1,auction2,auction3,auction4));
             auctionRepository.saveAll(auctionList);

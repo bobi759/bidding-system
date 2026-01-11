@@ -25,10 +25,10 @@ public class BidController {
     }
 
     @Operation(
-            summary = "List all video games",
-            description = "Returns a list of all video games available in the system"
+            summary = "Make bid",
+            description = "Handles creating a bid"
     )
-    @PostMapping("/createBid")
+    @PostMapping("/")
     public ResponseEntity<?> makeBid(@RequestBody @Valid CreateBidDTO createBidDTO){
 
         CreateBidInput createAuctionInput = new CreateBidInput(
@@ -38,6 +38,6 @@ public class BidController {
 
         bidService.makeBid(createAuctionInput);
 
-        return ResponseEntity.ok("Some text");
+        return ResponseEntity.ok("Bid Created successfully");
     }
 }

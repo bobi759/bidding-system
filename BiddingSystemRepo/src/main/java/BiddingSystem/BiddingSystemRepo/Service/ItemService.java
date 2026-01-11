@@ -48,7 +48,8 @@ public class ItemService {
     }
 
     public List<OutputItemDTO> getAllItems() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication(); Long userId = (Long) authentication.getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = (Long) authentication.getPrincipal();
 
         return itemRepository.findAllByOwnerId(userId)
                 .stream()

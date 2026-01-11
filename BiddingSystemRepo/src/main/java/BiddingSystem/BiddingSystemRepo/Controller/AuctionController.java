@@ -5,12 +5,15 @@ import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.CreateAuctionInput;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.ExposeAuctionDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.MakePaymentDTO;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
+import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import BiddingSystem.BiddingSystemRepo.Service.AuctionService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -40,13 +43,29 @@ public class AuctionController {
     }
 
     @Operation(
-            summary = "List all bids",
-            description = "Returns a list of all auctions with item, owner and bid history info"
+            summary = "List all auctions",
+            description = "Returns a list of all auctions with item, owner and bid history info with filter options"
     )
     @GetMapping("/")
-    public ResponseEntity<?> showAllAuctions(){
-        List<ExposeAuctionDTO> auctionList = auctionService.showAllAuctions();
+    public ResponseEntity<?> showAllAuctions(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) ZonedDateTime endsBefore
+    ){
+        AuctionStatusEnum enumStatus = null;
+
+        if (status != null) {
+            enumStatus = AuctionStatusEnum.valueOf(status.toUpperCase());
+        }
+
+        List<ExposeAuctionDTO> auctionList = auctionService.showAllAuctions(enumStatus,minPrice,endsBefore);
         return ResponseEntity.ok(auctionList);
+    }
+
+    @GetMapping("/{auctionId}")
+    public ResponseEntity<ExposeAuctionDTO> getAuction(@PathVariable("auctionId") Long auctionId){
+        ExposeAuctionDTO dto = auctionService.getAuctionById(auctionId);
+        return ResponseEntity.ok(dto);
     }
 
     public ResponseEntity<?> makeAuctionPayment(@RequestBody MakePaymentDTO makePaymentDTO){

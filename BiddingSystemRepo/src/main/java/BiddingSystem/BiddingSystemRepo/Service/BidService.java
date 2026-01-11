@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class BidService {
@@ -60,16 +61,22 @@ public class BidService {
             throw new OwnerBiddingOwnItemException("Owner of item cannot bid on its own listed items!");
         }
 
-        BigDecimal currentPrice = bidRepository
-                .findTopByAuctionOrderByPriceDesc(auction)
+
+        Optional<Bid> currentBidOptional = bidRepository.findTopByAuctionOrderByPriceDesc(auction);
+
+        BigDecimal referencePrice = currentBidOptional
                 .map(Bid::getPrice)
                 .orElse(auction.getStartingPrice());
 
-        if (currentPrice.compareTo(createBidInput.getBidPrice()) >= 0) {
+        if (referencePrice.compareTo(createBidInput.getBidPrice()) >= 0) {
             throw new InvalidBidException("New bid must be higher than the current price!");
         }
 
-        if (createBidInput.getBidPrice().subtract(currentPrice).compareTo(auction.getMinimumIncrement()) < 0) {
+        if (currentBidOptional.isPresent() && currentBidOptional.get().getUser().equals(user)) {
+            throw new InvalidBidException("You cannot overbid yourself!");
+        }
+
+        if ((createBidInput.getBidPrice().subtract(referencePrice)).compareTo(auction.getMinimumIncrement()) < 0) {
             throw new InvalidBidIncrementException("New bid does not meet minimum increment requirements!");
         }
 

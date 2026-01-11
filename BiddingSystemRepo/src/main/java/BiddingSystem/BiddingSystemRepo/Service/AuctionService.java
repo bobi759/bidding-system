@@ -7,6 +7,7 @@ import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionNotFoun
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionPastStartingTimeException;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.ItemAlreadyInAuction;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.UserInsufficientBalanceException;
+import BiddingSystem.BiddingSystemRepo.Exception.BidException.InvalidBidException;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemNotFound;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Bid;
@@ -242,11 +243,31 @@ public class AuctionService {
         auctionRepository.saveAll(scheduledAuctions);
     }
 
-    public List<ExposeAuctionDTO> showAllAuctions(){
-        return auctionRepository.findAll()
+    public List<ExposeAuctionDTO> showAllAuctions(AuctionStatusEnum status,BigDecimal minPrice,ZonedDateTime endsBefore){
+
+        if (status == null){
+            status = AuctionStatusEnum.ACTIVE;
+        }
+
+        if (minPrice == null){
+            minPrice = BigDecimal.ZERO;
+        }
+
+        if (endsBefore == null){
+            endsBefore = ZonedDateTime.now().plus(Duration.ofDays(7));
+        }
+
+        List<Auction> auctions = auctionRepository.search(status,minPrice,endsBefore);
+
+
+        return auctions
                 .stream()
                 .map(auction -> modelMapper.map(auction, ExposeAuctionDTO.class))
                 .toList();
+    }
+
+    public ExposeAuctionDTO getAuctionById(Long auctionId){
+        return modelMapper.map(auctionRepository.findByItemId(auctionId).orElseThrow(() -> new InvalidBidException("Invalid")),ExposeAuctionDTO.class);
     }
 
 }

@@ -1,19 +1,15 @@
 package BiddingSystem.BiddingSystemRepo.Exception;
 
 
-import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.InvalidEnumValueException;
 import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.BaseCustomException;
-import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.InvalidPasswordException;
-import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.UserNotFoundException;
+import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
@@ -58,6 +54,32 @@ public class GlobalExceptionHandler {
         pd.setInstance(URI.create(req.getRequestURI()));
         pd.setProperty("timestamp", LocalDateTime.now().toString());
         return pd;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest req
+    ) {
+        if (ex.getMessage() != null && ex.getMessage().contains("No enum constant")) {
+
+            ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+            pd.setTitle("InvalidEnumValueException");
+            pd.setDetail(ex.getMessage());
+            pd.setInstance(URI.create(req.getRequestURI()));
+            pd.setProperty("timestamp", LocalDateTime.now().toString());
+
+            pd.setProperty(
+                    "allowedValues",
+                    Arrays.stream(AuctionStatusEnum.values())
+                            .map(Enum::name)
+                            .toList()
+            );
+
+            return pd;
+        }
+
+        throw ex;
     }
 
     @ExceptionHandler(BaseCustomException.class)
