@@ -54,4 +54,7 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
     private Set<Item> itemSet = new HashSet<>();
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<UserTransactions> transactions = new HashSet<>();
+
 }

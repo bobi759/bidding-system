@@ -1,5 +1,6 @@
 package BiddingSystem.BiddingSystemRepo.Service;
 
+import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.BidDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.CreateBidInput;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionBidOnInvalidStatus;
 import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionNotFound;
@@ -14,6 +15,7 @@ import BiddingSystem.BiddingSystemRepo.Repository.AuctionRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.BidRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.ItemRepository;
 import BiddingSystem.BiddingSystemRepo.Repository.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,14 +32,16 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
-    public BidService(BidRepository bidRepository, AuctionRepository auctionRepository, UserRepository userRepository) {
+    public BidService(BidRepository bidRepository, AuctionRepository auctionRepository, UserRepository userRepository, ModelMapper modelMapper) {
         this.auctionRepository = auctionRepository;
         this.userRepository = userRepository;
         this.bidRepository = bidRepository;
+        this.modelMapper = modelMapper;
     }
 
-    public void makeBid(CreateBidInput createBidInput) {
+    public BidDTO makeBid(CreateBidInput createBidInput) {
 
         ZonedDateTime now = ZonedDateTime.now();
 
@@ -61,13 +65,13 @@ public class BidService {
             throw new OwnerBiddingOwnItemException("Owner of item cannot bid on its own listed items!");
         }
 
-
         Optional<Bid> currentBidOptional = bidRepository.findTopByAuctionOrderByPriceDesc(auction);
 
         BigDecimal referencePrice = currentBidOptional
                 .map(Bid::getPrice)
                 .orElse(auction.getStartingPrice());
 
+//        TODO: WOKS BUT CAN BE SMOOTER
         if (referencePrice.compareTo(createBidInput.getBidPrice()) >= 0) {
             throw new InvalidBidException("New bid must be higher than the current price!");
         }
@@ -87,5 +91,11 @@ public class BidService {
         bid.setPrice(createBidInput.getBidPrice());
 
         bidRepository.save(bid);
+
+        BidDTO bidDTO = modelMapper.map(bid,BidDTO.class);
+
+        return bidDTO;
     }
+
+//    TODO: GET CURRENT MAX BID
 }

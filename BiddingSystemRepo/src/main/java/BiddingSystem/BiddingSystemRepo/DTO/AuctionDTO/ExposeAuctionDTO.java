@@ -2,6 +2,7 @@ package BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO;
 
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.BidDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.OutputItemDTO;
+import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.AuctionBidderDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.UserDTO.AuctionOwnerDTO;
 import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import jakarta.persistence.*;
@@ -33,6 +34,8 @@ public class ExposeAuctionDTO {
     private AuctionStatusEnum auctionStatusEnum;
 
     private OutputItemDTO item;
+
+    private AuctionBidderDTO winner;
 
     private AuctionOwnerDTO owner;
 

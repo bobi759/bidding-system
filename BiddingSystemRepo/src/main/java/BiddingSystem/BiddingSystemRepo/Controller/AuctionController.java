@@ -8,7 +8,9 @@ import BiddingSystem.BiddingSystemRepo.Service.AuctionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ import java.util.List;
 )
 @RestController
 @RequestMapping("/api/v1/auction")
+@Validated
 public class AuctionController {
 
     private final AuctionService auctionService;
@@ -51,11 +54,14 @@ public class AuctionController {
 
     @Operation(
             summary = "List all auctions",
-            description = "Returns a list of all auctions with item, owner and bid history info with filter options. Default values of filters: status - **ACTIVE**, minPrice - **0**, endsBefore - **now() + 7 days offset**"
+            description = "Returns a list of all auctions with item, owner and bid history info with filter options." +
+                    " Default values of filters: status - **ACTIVE**, minPrice - **0**, endsBefore - **now() + 7 days offset**" +
+                    " - example custom endsBefore format - 2026-02-27T15:44:10+02:00"
     )
     @GetMapping("/")
     public ResponseEntity<?> showAllAuctions(
             @RequestParam(required = false) String status,
+            @PositiveOrZero(message = "minPrice must be zero or positive")
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) ZonedDateTime endsBefore
     ){
@@ -78,5 +84,19 @@ public class AuctionController {
         ExposeAuctionDTO dto = auctionService.getAuctionById(auctionId);
         return ResponseEntity.ok(dto);
     }
+
+    @Operation(
+            summary = "Get pending payment auctions",
+            description = "Extract pending payment auctions won by current user waiting to be paid"
+    )
+    @GetMapping("/pendingPayment")
+    public ResponseEntity<List<ExposeAuctionDTO>> getPendingPayment() {
+
+        List<ExposeAuctionDTO> auctions =
+                auctionService.getPendingPaymentAuctions();
+
+        return ResponseEntity.ok(auctions);
+    }
+
 
 }

@@ -5,8 +5,10 @@ import BiddingSystem.BiddingSystemRepo.Exception.UserExceptions.BaseCustomExcept
 import BiddingSystem.BiddingSystemRepo.Model.Enum.AuctionStatusEnum;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +18,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -117,6 +120,25 @@ public class GlobalExceptionHandler {
         pd.setProperty("errors", fieldErrors);
 
         return pd;
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(
+            ConstraintViolationException ex
+    ) {
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("status", 400);
+        body.put("error", "Bad Request");
+
+        List<String> messages = ex.getConstraintViolations()
+                .stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .toList();
+
+        body.put("messages", messages);
+
+        return ResponseEntity.badRequest().body(body);
     }
 
 
