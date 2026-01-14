@@ -2,6 +2,7 @@ package BiddingSystem.BiddingSystemRepo.Controller;
 
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.CreateBidDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.CreateBidInput;
+import BiddingSystem.BiddingSystemRepo.DTO.PaymentDTO.SuccessfulDepositWithdrawDTO;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.SystemBalance;
 import BiddingSystem.BiddingSystemRepo.Service.SystemBalanceService;
 import BiddingSystem.BiddingSystemRepo.Service.UserBalanceService;
@@ -39,8 +40,8 @@ public class UserBalanceController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
 
-        userBalanceService.deposit(userId, amount);
-        return ResponseEntity.ok("Money Deposited Successfully");
+        SuccessfulDepositWithdrawDTO dto = userBalanceService.deposit(userId, amount);
+        return ResponseEntity.ok(dto);
     }
 
     @Operation(
@@ -51,8 +52,8 @@ public class UserBalanceController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long userId = (Long) authentication.getPrincipal();
 
-        userBalanceService.withdraw(userId, amount);
-        return ResponseEntity.ok("Money withdrawn successfully");
+        SuccessfulDepositWithdrawDTO dto = userBalanceService.withdraw(userId, amount);
+        return ResponseEntity.ok(dto);
     }
 
     @Operation(
@@ -66,6 +67,18 @@ public class UserBalanceController {
 
         BigDecimal userBalance = userBalanceService.viewBalance(userId);
         return ResponseEntity.ok("User balance: " + userBalance);
+    }
+
+    @Operation(
+            summary = "View transaction history",
+            description = "Returns deposit and withdrawal transactions for the currently logged-in user"
+    )
+    @GetMapping("/transactions")
+    public ResponseEntity<?> viewMyTransactions() {
+
+        return ResponseEntity.ok(
+                userBalanceService.getMyTransactions()
+        );
     }
 
 

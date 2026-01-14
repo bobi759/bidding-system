@@ -179,6 +179,103 @@ public class DataSeeder {
             SystemBalance systemBalance = new SystemBalance();
             systemBalanceRepository.save(systemBalance);
 
+
+// -----------------------------------------------------------------------------
+// Bidding logic – test auctions
+
+
+            User itemHolder = new User();
+            itemHolder.setEmail("owner@email.com");
+            itemHolder.setUsername("ownerOfItem");
+            itemHolder.setPassword(passwordEncoder.encode("ownerItem"));
+            itemHolder.setAge(40);
+            itemHolder.setBalance(BigDecimal.ZERO);
+            itemHolder.setAddress("Home");
+
+            userRepository.save(itemHolder);
+
+            Item itemToBeSold = new Item();
+            itemToBeSold.setName("Mystic Punch");
+            itemToBeSold.setDescription("This item will be sold sometime!");
+            itemToBeSold.setItemConditionEnum(ItemConditionEnum.NEW);
+            itemToBeSold.setItemCategoryEnum(ItemCategoryEnum.COLLECTIBLES);
+            itemToBeSold.setOwner(itemHolder);
+
+            itemRepository.save(itemToBeSold);
+
+            Auction newAuction = new Auction();
+            newAuction.setStartingAt(ZonedDateTime.now());
+            newAuction.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
+            newAuction.setAuctionDuration(Duration.ofSeconds(60));
+            newAuction.setStartingPrice(BigDecimal.valueOf(50));
+            newAuction.setReservePrice(BigDecimal.valueOf(100));
+            newAuction.setMinimumIncrement(BigDecimal.valueOf(5));
+            newAuction.setItem(itemToBeSold);
+
+            auctionRepository.save(newAuction);
+
+            User competitor1 = new User();
+            competitor1.setEmail("comp1@example.com");
+            competitor1.setUsername("comp1");
+            competitor1.setPassword(passwordEncoder.encode("comp1"));
+            competitor1.setAge(45);
+            competitor1.setBalance(BigDecimal.ZERO);
+            competitor1.setAddress("Home1");
+
+            User competitor2 = new User();
+            competitor2.setEmail("comp2@example.com");
+            competitor2.setUsername("comp2");
+            competitor2.setPassword(passwordEncoder.encode("comp2"));
+            competitor2.setAge(35);
+            competitor2.setBalance(BigDecimal.ZERO);
+            competitor2.setAddress("Home2");
+
+            User competitor3 = new User();
+            competitor3.setEmail("comp3@example.com");
+            competitor3.setUsername("comp3");
+            competitor3.setPassword(passwordEncoder.encode("comp3"));
+            competitor3.setAge(40);
+            competitor3.setBalance(BigDecimal.ZERO);
+            competitor3.setAddress("home3");
+
+            userRepository.save(competitor1);
+            userRepository.save(competitor2);
+            userRepository.save(competitor3);
+
+            Item newItem = new Item();
+            newItem.setName("insane Punch");
+            newItem.setDescription("This item will be sold sometime!");
+            newItem.setItemConditionEnum(ItemConditionEnum.NEW);
+            newItem.setItemCategoryEnum(ItemCategoryEnum.COLLECTIBLES);
+            newItem.setOwner(itemHolder);
+
+            itemRepository.save(newItem);
+
+            Auction newAuction2 = new Auction();
+            newAuction2.setStartingAt(ZonedDateTime.now());
+            newAuction2.setAuctionStatusEnum(AuctionStatusEnum.ACTIVE);
+            newAuction2.setAuctionDuration(Duration.ofSeconds(120));
+            newAuction2.setStartingPrice(BigDecimal.valueOf(50));
+            newAuction2.setReservePrice(BigDecimal.valueOf(100));
+            newAuction2.setMinimumIncrement(BigDecimal.valueOf(5));
+            newAuction2.setItem(newItem);
+
+            auctionRepository.save(newAuction2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -----------------------------------------------------------------------------
+
         };
     }
 }

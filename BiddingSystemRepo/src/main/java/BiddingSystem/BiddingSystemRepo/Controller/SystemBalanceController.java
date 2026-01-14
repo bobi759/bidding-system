@@ -30,8 +30,7 @@ public class SystemBalanceController {
     )
     @GetMapping("/")
     @PreAuthorize("hasAuthority('Admin')")
-    public ResponseEntity<?> adminOnly(){
-//        TODO: CATCH 401 ERROR WITH CUSTOM TEXT
+    public ResponseEntity<?> adminOnlyGetSystemBalance(){
         return ResponseEntity.ok(systemBalanceService.getSystemBalance());
     }
 

@@ -3,10 +3,7 @@ package BiddingSystem.BiddingSystemRepo.Service;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.CreateAuctionInput;
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.ExposeAuctionDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.ItemDTO.OutputItemDTO;
-import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionNotFound;
-import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.AuctionPastStartingTimeException;
-import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.ItemAlreadyInAuction;
-import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.UserInsufficientBalanceException;
+import BiddingSystem.BiddingSystemRepo.Exception.AuctionException.*;
 import BiddingSystem.BiddingSystemRepo.Exception.BidException.InvalidBidException;
 import BiddingSystem.BiddingSystemRepo.Exception.ItemExceptions.ItemNotFound;
 import BiddingSystem.BiddingSystemRepo.Model.Entity.Auction;
@@ -100,7 +97,11 @@ public class AuctionService {
 
 
         if (startCompare.isBefore(nowCompare.minusSeconds(2))) {
-            throw new AuctionPastStartingTimeException("Auction cannot start more than 2 seconds ago");
+            throw new AuctionPastStartingTimeException("Auction cannot start more than 2 seconds ago!");
+        }
+
+        if (input.getStartingAt().isAfter(now.plusWeeks(2))) {
+            throw new AuctionPastStartingTimeException("Auction cannot start more than 2 weeks from present!");
         }
 
         validatePrices(input);
@@ -202,15 +203,15 @@ public class AuctionService {
                 .orElseThrow(() -> new AuctionNotFound("Auction not found"));
 
         if (auction.getAuctionStatusEnum() != AuctionStatusEnum.PENDING_PAYMENT) {
-            throw new IllegalStateException("Auction is not awaiting payment");
+            throw new AuctionNonWaitingPaymentException("Auction is not awaiting payment");
         }
 
         if (ZonedDateTime.now().isAfter(auction.getPaymentDeadline())) {
-            throw new IllegalStateException("Payment window expired");
+            throw new PaymentWindowExpiredException("Payment window expired");
         }
 
         if (!auction.getWinner().getId().equals(userId)) {
-            throw new IllegalStateException("Only winner can pay");
+            throw new NonWinnerPaysAuctionException("Only winner can pay");
         }
 
         User buyer = auction.getWinner();
@@ -289,6 +290,21 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId).orElseThrow(() -> new AuctionNotFound("Auction not found"));
 
         return modelMapper.map(auction,ExposeAuctionDTO.class);
+    }
+
+    public List<ExposeAuctionDTO> getPendingPaymentAuctions() {
+
+        Long userId = extractUserId();
+
+        List<Auction> auctions = auctionRepository
+                .findByAuctionStatusEnumAndWinner_Id(
+                        AuctionStatusEnum.PENDING_PAYMENT,
+                        userId
+                );
+
+        return auctions.stream()
+                .map(a -> modelMapper.map(a, ExposeAuctionDTO.class))
+                .toList();
     }
 
 }

@@ -2,6 +2,7 @@ package BiddingSystem.BiddingSystemRepo.Controller;
 
 
 import BiddingSystem.BiddingSystemRepo.DTO.AuctionDTO.CreateAuctionInput;
+import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.BidDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.CreateBidDTO;
 import BiddingSystem.BiddingSystemRepo.DTO.BidDTO.CreateBidInput;
 import BiddingSystem.BiddingSystemRepo.Service.BidService;
@@ -41,9 +42,8 @@ public class BidController {
                 createBidDTO.getBidPrice()
         );
 
-        bidService.makeBid(createAuctionInput);
-//        TODO: RETURN DATA NOT TEXT
-        return ResponseEntity.ok("Bid Created successfully");
+        BidDTO bidDto =  bidService.makeBid(createAuctionInput);
+        return ResponseEntity.ok(bidDto);
     }
 
 
